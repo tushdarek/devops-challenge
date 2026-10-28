@@ -1,8 +1,9 @@
-
 #!/bin/bash
 set -euxo pipefail
 
 export DEBIAN_FRONTEND=noninteractive
+
+# Install Docker and the host firewall.
 apt-get update
 apt-get install -y docker.io ufw
 
@@ -18,15 +19,16 @@ printf 'appadmin ALL=(ALL) NOPASSWD:ALL\n' > /etc/sudoers.d/appadmin
 chmod 0440 /etc/sudoers.d/appadmin
 visudo -cf /etc/sudoers.d/appadmin
 
-# Install the real app source and Dockerfile from the repository.
-install -d -m 0755 /opt/intern-task-app
+# Install the real application source and Dockerfile.
+# The Dockerfile expects app/app.py relative to the build context.
+install -d -m 0755 /opt/intern-task-app/app
 
-printf '%s' '${app_py_b64}' | base64 -d > /opt/intern-task-app/app.py
+printf '%s' '${app_py_b64}' | base64 -d > /opt/intern-task-app/app/app.py
 printf '%s' '${dockerfile_b64}' | base64 -d > /opt/intern-task-app/Dockerfile
 
-chmod 0644 /opt/intern-task-app/app.py /opt/intern-task-app/Dockerfile
+chmod 0644 /opt/intern-task-app/app/app.py /opt/intern-task-app/Dockerfile
 
-# Build and run the container through systemd.
+# Build and run the actual application through systemd.
 cat > /etc/systemd/system/intern-task-app.service <<'UNIT'
 [Unit]
 Description=Intern Task App Docker Container
@@ -56,4 +58,3 @@ ufw default allow outgoing
 ufw allow from '${ssh_cidr}' to any port 22 proto tcp
 ufw allow 5000/tcp
 ufw --force enable
-
