@@ -89,7 +89,7 @@ resource "aws_instance" "app" {
   user_data_replace_on_change = false
 
   user_data = templatefile("${path.module}/user_data.sh.tftpl", {
-    app_py_b64    = filebase64("${path.module}/../../intern-task-app/app/app.py")
+    app_py_b64     = filebase64("${path.module}/../../intern-task-app/app/app.py")
     dockerfile_b64 = filebase64("${path.module}/../../intern-task-app/Dockerfile")
     ssh_cidr       = var.ssh_cidr
   })
